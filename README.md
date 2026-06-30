@@ -206,6 +206,44 @@ Now upload a PDF and start using the application.
 The objective of this project is to demonstrate how Generative AI can improve learning by transforming static PDF documents into an interactive study assistant. It helps students quickly understand concepts, revise important topics, and test their knowledge using AI-generated content.
 
 ---
+## Environment Variables
+
+For security reasons, this repository does **not** include the `.env` file. Sensitive information such as API keys and secret keys should never be committed to GitHub.
+
+Create a file named `.env` in the project root directory and add the following:
+
+```env
+FLASK_SECRET_KEY=your_secret_key
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+### Getting a Google Gemini API Key
+
+1. Visit **Google AI Studio**.
+2. Sign in with your Google account.
+3. Click **Create API Key**.
+4. Copy the generated API key.
+5. Paste it into your `.env` file.
+
+---
+
+## Files Ignored by Git
+
+This project uses a `.gitignore` file to exclude files and folders that should not be uploaded to GitHub.
+
+The following are ignored:
+
+- `.env` – Stores API keys and other sensitive environment variables.
+- `venv/` – Python virtual environment.
+- `.venv/` – Alternative virtual environment folder.
+- `__pycache__/` – Python cache files generated automatically.
+- `*.pyc` – Compiled Python files.
+- `chroma_store/` – Local ChromaDB vector database generated at runtime.
+- `uploads/` – User-uploaded PDF files generated during application usage.
+
+These files and folders are created automatically during development or contain sensitive information, so they are intentionally excluded from version control.
+
+> **Note:** After cloning this repository, create your own `.env` file and install the required dependencies before running the project.
 
 ## Developed By
 

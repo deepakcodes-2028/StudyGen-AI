@@ -1,0 +1,7 @@
+Flask==3.0.3
+pymupdf
+chromadb
+sentence-transformers
+google-genai
+python-dotenv
+numpy

@@ -1,6 +1,0 @@
-Flask==3.0.3
-pymupdf
-google-genai
-python-dotenv
-numpy
-gunicorn

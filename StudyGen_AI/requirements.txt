@@ -1,8 +1,0 @@
-Flask==3.0.3
-gunicorn
-pymupdf
-chromadb
-sentence-transformers
-google-genai
-python-dotenv
-numpy

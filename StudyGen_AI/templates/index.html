@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyGen AI – AI PDF Study Assistant</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="graduation-cap" class="brand-icon"></i>
+                </div>
+                <div class="brand-info">
+                    <h1>StudyGen AI</h1>
+                    <span>Study Assistant</span>
+                </div>
+            </div>
+
+            <!-- Upload Info (Initially Hidden) -->
+            <div id="doc-info-card" class="doc-info-card hidden">
+                <h3 class="sidebar-title">Active Document</h3>
+                <div class="doc-meta">
+                    <i data-lucide="file-text" class="meta-icon"></i>
+                    <div class="meta-details">
+                        <p id="doc-filename" class="doc-name">lecture_notes.pdf</p>
+                        <span id="doc-page-count" class="doc-pages">12 Pages</span>
+                    </div>
+                </div>
+                <button id="btn-upload-new" class="btn btn-secondary btn-sm btn-icon-only">
+                    <i data-lucide="refresh-cw"></i> Upload Another
+                </button>
+            </div>
+
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar-nav">
+                <h3 class="sidebar-title">Features</h3>
+                <ul>
+                    <li>
+                        <button id="nav-chat" class="nav-item active" disabled>
+                            <i data-lucide="message-square"></i>
+                            <span>Ask PDF (Chat)</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-summary" class="nav-item" disabled>
+                            <i data-lucide="file-search"></i>
+                            <span>Study Summary</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-quiz" class="nav-item" disabled>
+                            <i data-lucide="help-circle"></i>
+                            <span>Practice Quiz</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button id="nav-flashcards" class="nav-item" disabled>
+                            <i data-lucide="layers"></i>
+                            <span>Flashcards</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Export / Downloads -->
+            <div id="export-section" class="export-section hidden">
+                <h3 class="sidebar-title">Downloads</h3>
+                <button id="btn-export-md" class="btn btn-primary btn-icon btn-block">
+                    <i data-lucide="download"></i> Export Study Notes (.md)
+                </button>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p>Powered by Google Gemini API</p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            
+            <!-- Upload Overlay State -->
+            <div id="upload-screen" class="workspace-screen active-screen">
+                <div class="glass-card upload-card">
+                    <div class="upload-art">
+                        <i data-lucide="cloud-upload" class="upload-icon-large"></i>
+                    </div>
+                    <h2>Transform Your PDF Notes</h2>
+                    <p class="upload-subtitle">Upload textbooks, lecture notes, or slides and let AI structure your learning.</p>
+                    
+                    <div id="drop-zone" class="drop-zone">
+                        <i data-lucide="file" class="drop-icon"></i>
+                        <p>Drag & drop your PDF file here, or <span class="browse-link">browse files</span></p>
+                        <input type="file" id="file-input" accept="application/pdf" class="hidden-input">
+                    </div>
+                    
+                    <div id="upload-progress-container" class="upload-progress-container hidden">
+                        <div class="progress-info">
+                            <span id="upload-status-text">Analyzing document...</span>
+                            <span id="upload-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="upload-progress-bar" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Screen (RAG View) -->
+            <div id="chat-screen" class="workspace-screen hidden">
+                <div class="screen-header">
+                    <h2>Ask Questions</h2>
+                    <p>Ask anything about the document and receive precise, context-based AI responses.</p>
+                </div>
+                <div class="chat-container glass-card">
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Welcome message -->
+                        <div class="message message-system">
+                            <div class="message-bubble">
+                                <p>Hi! I've analyzed your PDF notes. Ask me any questions about the material, or use the navigation tabs to generate summaries, quizzes, or flashcards.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <form id="chat-form">
+                            <input type="text" id="chat-input" placeholder="Ask a question about this document..." autocomplete="off">
+                            <button type="submit" id="chat-send-btn" class="btn btn-primary btn-icon-only">
+                                <i data-lucide="send"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Screen -->
+            <div id="summary-screen" class="workspace-screen hidden">
+                <div class="screen-header">
+                    <h2>Study Summary</h2>
+                    <p>Comprehensive summaries and structured key takeaways compiled automatically.</p>
+                </div>
+                <div id="summary-content-container" class="glass-card summary-container">
+                    <!-- Skeleton Loader -->
+                    <div id="summary-skeleton" class="skeleton-loader hidden">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        <div class="skeleton skeleton-title" style="margin-top: 40px;"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 90%;"></div>
+                    </div>
+                    <!-- Live Content -->
+                    <div id="summary-content" class="markdown-body">
+                        <!-- Loaded Summary HTML will go here -->
+                    </div>
+                    <!-- Empty State -->
+                    <div id="summary-empty" class="tab-empty-state">
+                        <i data-lucide="file-text" class="empty-icon"></i>
+                        <h3>Generate Summary</h3>
+                        <p>Let AI read the entire document to construct a detailed revision summary and breakdown of the concepts.</p>
+                        <button id="btn-generate-summary" class="btn btn-primary">
+                            <i data-lucide="sparkles"></i> Generate Summary
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="workspace-screen hidden">
+                <div class="screen-header">
+                    <h2>Practice Quiz</h2>
+                    <p>Test your knowledge with multiple-choice questions dynamically generated from your notes.</p>
+                </div>
+                
+                <div id="quiz-content-container" class="quiz-container">
+                    <!-- Skeleton Loader -->
+                    <div id="quiz-skeleton" class="glass-card skeleton-loader hidden">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 40px; margin-top: 20px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 40px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 40px;"></div>
+                    </div>
+
+                    <!-- Interactive Quiz Box -->
+                    <div id="quiz-box" class="glass-card quiz-box hidden">
+                        <div class="quiz-progress">
+                            <div class="quiz-progress-text">Question <span id="current-question-num">1</span> of 5</div>
+                            <div class="progress-bar-bg" style="height: 6px;">
+                                <div id="quiz-progress-bar" class="progress-bar-fill" style="width: 20%;"></div>
+                            </div>
+                        </div>
+
+                        <div id="quiz-question-container">
+                            <h3 id="quiz-question-text" class="quiz-question">What is the capital of France?</h3>
+                            
+                            <div class="quiz-options">
+                                <button class="option-btn" data-letter="A">
+                                    <span class="option-label">A</span>
+                                    <span class="option-text" id="opt-A">Paris</span>
+                                </button>
+                                <button class="option-btn" data-letter="B">
+                                    <span class="option-label">B</span>
+                                    <span class="option-text" id="opt-B">London</span>
+                                </button>
+                                <button class="option-btn" data-letter="C">
+                                    <span class="option-label">C</span>
+                                    <span class="option-text" id="opt-C">Berlin</span>
+                                </button>
+                                <button class="option-btn" data-letter="D">
+                                    <span class="option-label">D</span>
+                                    <span class="option-text" id="opt-D">Madrid</span>
+                                </button>
+                            </div>
+
+                            <div id="quiz-explanation-box" class="quiz-explanation hidden">
+                                <div class="explanation-title">
+                                    <i data-lucide="info"></i>
+                                    <span>Explanation</span>
+                                </div>
+                                <p id="quiz-explanation-text">Explanation text here.</p>
+                            </div>
+                        </div>
+
+                        <div class="quiz-controls">
+                            <button id="btn-quiz-next" class="btn btn-primary" disabled>
+                                Next Question <i data-lucide="arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Score Screen -->
+                    <div id="quiz-score-screen" class="glass-card score-screen hidden">
+                        <div class="score-radial">
+                            <span id="score-percentage">80%</span>
+                            <p>Correct Answers</p>
+                        </div>
+                        <h2>Practice Session Complete!</h2>
+                        <p id="score-summary-text">You got 4 out of 5 questions correct.</p>
+                        <div class="score-buttons">
+                            <button id="btn-quiz-retry" class="btn btn-secondary">
+                                <i data-lucide="rotate-ccw"></i> Try Again
+                            </button>
+                            <button id="btn-quiz-regenerate" class="btn btn-primary">
+                                <i data-lucide="sparkles"></i> Generate New Quiz
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="quiz-empty" class="glass-card tab-empty-state">
+                        <i data-lucide="help-circle" class="empty-icon"></i>
+                        <h3>Practice Makes Perfect</h3>
+                        <p>Generate a quiz containing 5 custom questions based on your notes to test your understanding.</p>
+                        <button id="btn-generate-quiz" class="btn btn-primary">
+                            <i data-lucide="sparkles"></i> Generate Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flashcards Screen -->
+            <div id="flashcards-screen" class="workspace-screen hidden">
+                <div class="screen-header">
+                    <h2>Revision Flashcards</h2>
+                    <p>Flip cards to review key definitions, concepts, and ideas from the document.</p>
+                </div>
+
+                <div id="flashcards-content-container" class="flashcards-container">
+                    <!-- Skeleton Loader -->
+                    <div id="flashcards-skeleton" class="skeleton-loader hidden">
+                        <div class="flashcards-grid">
+                            <div class="glass-card skeleton-card"></div>
+                            <div class="glass-card skeleton-card"></div>
+                            <div class="glass-card skeleton-card"></div>
+                            <div class="glass-card skeleton-card"></div>
+                        </div>
+                    </div>
+
+                    <!-- Flashcards Grid -->
+                    <div id="flashcards-grid" class="flashcards-grid hidden">
+                        <!-- Cards will be populated dynamically -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="flashcards-empty" class="glass-card tab-empty-state">
+                        <i data-lucide="layers" class="empty-icon"></i>
+                        <h3>Generate Flashcards</h3>
+                        <p>Extract core concepts and definitions from your document, formatted into interactive revision flashcards.</p>
+                        <button id="btn-generate-flashcards" class="btn btn-primary">
+                            <i data-lucide="sparkles"></i> Generate Flashcards
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    
+    <!-- Client Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

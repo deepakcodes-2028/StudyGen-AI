@@ -170,9 +170,16 @@ function handleFileUpload(file) {
         method: 'POST',
         body: formData
     })
-    .then(response => {
+    .then(async response => {
         clearInterval(progressInterval);
-        if (!response.ok) throw new Error("Failed to process document");
+        if (!response.ok) {
+            try {
+                const errData = await response.json();
+                throw new Error(errData.error || "Failed to process document");
+            } catch (e) {
+                throw new Error(e.message || "Failed to process document");
+            }
+        }
         return response.json();
     })
     .then(data => {
